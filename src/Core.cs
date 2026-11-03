@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：封装 JSON 数据、本地存储、设备请求与局域网发现。
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
