@@ -1,3 +1,4 @@
+﻿// 用途：管理单实例、系统托盘、后台常驻与三档开机启动。
 using System;
 using System.IO;
 using System.Linq;
