@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：加载应用商店目录、提示依赖并确认安装任务结果。
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
