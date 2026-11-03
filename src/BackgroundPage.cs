@@ -1,3 +1,4 @@
+﻿// 用途：提供开机启动方式选择与后台连接状态界面。
 using System;
 using System.Threading.Tasks;
 using System.Windows;
