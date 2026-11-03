@@ -1,3 +1,4 @@
+﻿// 用途：将 Windows 系统媒体缩略图读取并转换为 88×88 JPEG。
 using System;
 using System.IO;
 using System.Drawing;
