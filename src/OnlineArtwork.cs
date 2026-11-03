@@ -1,3 +1,4 @@
+﻿// 用途：补取在线专辑封面、转换 88×88 JPEG 并控制重试间隔。
 using System;
 using System.IO;
 using System.Drawing;
