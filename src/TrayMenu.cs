@@ -1,3 +1,4 @@
+﻿// 用途：绘制浅色圆角托盘菜单、悬停状态与选中标记。
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
