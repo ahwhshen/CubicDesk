@@ -1,3 +1,4 @@
+﻿// 用途：执行设备协议、配置保留、依赖模型与媒体能力诊断。
 using System;
 using System.IO;
 using System.Linq;
