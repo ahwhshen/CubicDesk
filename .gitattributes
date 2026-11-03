@@ -1,3 +1,4 @@
+# 用途：统一源码换行规则与二进制文件识别。
 * text=auto
 *.cs text eol=crlf
 *.ps1 text eol=crlf
