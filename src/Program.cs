@@ -1,3 +1,4 @@
+﻿// 用途：启动 WPF 应用、加载主题并处理单实例与诊断入口。
 using System;
 using System.IO;
 using System.Linq;
