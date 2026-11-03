@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：选择在线歌词来源并接入网易云歌词与专辑封面。
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
