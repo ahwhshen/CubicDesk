@@ -1,10 +1,12 @@
 # Cubic Desk
 
+> 用途：介绍项目功能、版本下载与源码和便携版安装方式。
+
 面向 HoloCubic / Cubic 摆件的 **Windows 原生桌面管理工具**。提供热点配网、应用与资源管理、Windows 音乐桥接、封面歌词同步，以及白色液态玻璃界面。
 
 使用 WPF、C# 5 和 .NET Framework 4.8。无需浏览器、Node.js、.NET SDK，也不需要部署服务器。
 
-[下载最新版本](https://github.com/ahwhshen/CubicDesk/releases/latest) · [完整使用说明](docs/使用说明.md) · [更新记录](CHANGELOG.md)
+[下载最新版本](https://github.com/ahwhshen/CubicDesk/releases/latest) · [完整使用说明](docs/使用说明.md) · [文件职责导航](docs/文件说明.md) · [更新记录](CHANGELOG.md)
 
 ## 选择下载版本
 
