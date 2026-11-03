@@ -1,4 +1,5 @@
-﻿param([ValidateSet('Status','Start','Stop','Configure','Credentials')][string]$Action='Status')
+﻿# 用途：调用 Windows 网络共享接口读取和配置移动热点。
+param([ValidateSet('Status','Start','Stop','Configure','Credentials')][string]$Action='Status')
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
 [Console]::InputEncoding=New-Object Text.UTF8Encoding($false)
