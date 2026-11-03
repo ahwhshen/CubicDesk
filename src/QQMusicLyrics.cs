@@ -1,3 +1,4 @@
+﻿// 用途：按歌名歌手和时长匹配 QQ 音乐歌词与专辑封面。
 using System;
 using System.Linq;
 using System.Text;
