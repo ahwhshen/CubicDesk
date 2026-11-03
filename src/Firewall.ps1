@@ -1,3 +1,4 @@
+﻿# 用途：在用户主动授权后为指定摆件创建桥接端口放行规则。
 param([ValidateRange(1024,65535)][int]$Port,[string]$RemoteAddress,[string]$ProgramPath)
 $ErrorActionPreference='Stop'
 $result=Join-Path $PSScriptRoot 'data/firewall-result.json'
