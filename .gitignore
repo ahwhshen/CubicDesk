@@ -1,3 +1,4 @@
+# 用途：排除构建产物、个人配置与开发临时文件。
 /outputs/
 /work/
 /AGENTS.md
@@ -9,3 +10,5 @@
 *.tmp
 Thumbs.db
 Desktop.ini
+
+/.codex/
