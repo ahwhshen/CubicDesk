@@ -1,5 +1,7 @@
 # 第三方组件与来源
 
+> 用途：说明第三方组件许可、来源与资源归属。
+
 本仓库的 Cubic Desk 原创代码采用 MIT 许可，见 [LICENSE](LICENSE)。第三方组件不因此改变其原有许可。
 
 ## FFmpeg / FFprobe
