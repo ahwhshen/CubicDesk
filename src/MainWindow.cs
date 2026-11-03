@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：组织主窗口导航、设备状态轮询与总览界面。
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
