@@ -1,3 +1,4 @@
+﻿// 用途：维护依赖清单、应用关联、校验合并与人工准备状态。
 using System;
 using System.IO;
 using System.Linq;
