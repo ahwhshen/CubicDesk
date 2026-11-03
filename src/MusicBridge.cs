@@ -1,3 +1,4 @@
+﻿// 用途：桥接系统音乐会话并向摆件提供状态、封面与同步歌词。
 using System;
 using System.IO;
 using System.Text;
