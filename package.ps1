@@ -1,3 +1,4 @@
+﻿# 用途：生成干净的源码包、Windows 便携包与 SHA-256 校验文件。
 param(
   [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$')][string]$Version='1.5.1',
   [string]$MediaToolsPath=''
