@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：配置本机 SMTC 桥接、播放器、歌词与摆件连接参数。
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
