@@ -1,3 +1,4 @@
+﻿// 用途：扫描摆件热点、指定联网目标并执行配网与网络恢复。
 using System;
 using System.IO;
 using System.Linq;
