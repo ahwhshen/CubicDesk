@@ -1,4 +1,5 @@
-﻿using System;
+﻿// 用途：提供电脑热点、摆件 Wi-Fi、应用管理与设备设置界面。
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
