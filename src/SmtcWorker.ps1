@@ -1,3 +1,4 @@
+﻿# 用途：读取 Windows 媒体会话、播放进度、封面并执行播放控制。
 param([string]$Preferred='', [int]$Interval=800, [string]$RuntimeAssembly='')
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
