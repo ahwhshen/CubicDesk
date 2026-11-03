@@ -107,6 +107,8 @@ work/                 临时分析与测试（不进入 Git）
 
 ## 许可与致谢
 
+目前项目刚开始，还有很多不足，如果有想法或者建议欢迎共同讨论
+
 Cubic Desk 原创代码使用 [MIT License](LICENSE)。FFmpeg / FFprobe 及设备应用资源保留各自许可，详见 [第三方说明](THIRD_PARTY_NOTICES.md)。
 
 设备应用与协议参考 [clocteck/holocubic-apps](https://github.com/clocteck/holocubic-apps)。本项目是独立的 Windows 管理工具。
