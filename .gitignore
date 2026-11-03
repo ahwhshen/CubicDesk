@@ -1,0 +1,11 @@
+/outputs/
+/work/
+/AGENTS.md
+/src/device-web/
+/src/assets/app-icons/*.png
+.vs/
+*.user
+*.suo
+*.tmp
+Thumbs.db
+Desktop.ini

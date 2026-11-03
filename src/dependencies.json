@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "dependencies": [
+    {
+      "id": "aida64-remotesensor", "name": "AIDA64 RemoteSensor", "kind": "电脑端软件",
+      "download_url": "https://www.aida64.com/downloads",
+      "guide_url": "https://github.com/clocteck/holocubic-apps/tree/main/holo_pc_monitor",
+      "description": "向电脑性能监控应用提供硬件传感器数据。",
+      "instructions": "自行安装支持 RemoteSensor 的 AIDA64 版本，启用 RemoteSensor，导入应用提供的 holo-aida.rslcd，然后在摆件设置电脑 IP、端口及 /sse 路径。许可与版本以作者和 AIDA64 官方说明为准。",
+      "source": "Holo PC Monitor 作者说明与 AIDA64 官方下载页"
+    },
+    {
+      "id": "python3", "name": "Python 3", "kind": "运行环境",
+      "download_url": "https://www.python.org/downloads/windows/",
+      "guide_url": "https://github.com/clocteck/holocubic-apps/tree/main/pc_mirror",
+      "description": "运行电脑投屏发送端所需的 Python 环境。",
+      "instructions": "按电脑投屏作者说明准备 Python 3，再安装其发送端所需依赖。具体兼容版本以发送端项目说明为准。",
+      "source": "PC Mirror 作者 README"
+    },
+    {
+      "id": "desktop-mirror-sender", "name": "Desktop Mirror 电脑发送端", "kind": "桥接程序",
+      "download_url": "https://github.com/clocteck/desktop-mirror",
+      "guide_url": "https://github.com/clocteck/holocubic-apps/tree/main/pc_mirror",
+      "description": "将电脑画面发送给商店中的 PC Mirror 应用。",
+      "instructions": "前往作者项目页下载电脑发送端，依照其说明安装依赖并启动，再把电脑地址和端口填入摆件端。Cubic Desk 仅提供项目入口，不运行下载的安装脚本。",
+      "source": "PC Mirror 作者 README"
+    },
+    {
+      "id": "smtc-pc-bridge", "name": "Windows 音乐 PC Bridge", "kind": "桥接程序",
+      "download_url": "", "guide_url": "https://github.com/clocteck/holocubic-apps",
+      "description": "将 Windows 媒体会话转换为摆件音乐应用可读取的数据。",
+      "instructions": "SMTC 本身是 Windows 内置能力。第三方 PC Bridge 的具体下载地址尚未登记，请向应用作者确认兼容版本并补充链接。现有 Cubic Desk 内置桥接保留在“本机工具”中，可按需要选用。",
+      "source": "当前设备 Windows 音乐应用说明；第三方下载地址待补充"
+    }
+  ],
+  "apps": [
+    {"app_id":"holo_pc_monitor","name":"电脑性能监控","reviewed":true,"requirements":[{"dependency_id":"aida64-remotesensor","version":"以应用作者要求为准","optional":false}]},
+    {"app_id":"pc_mirror","name":"电脑投屏 PC Mirror","reviewed":true,"requirements":[{"dependency_id":"python3","version":"Python 3；具体版本见作者说明","optional":false},{"dependency_id":"desktop-mirror-sender","version":"与设备端应用匹配","optional":false}]},
+    {"app_id":"holocubic-smtc-music","name":"Windows 音乐","reviewed":true,"requirements":[{"dependency_id":"smtc-pc-bridge","version":"兼容 /status、/control 接口","optional":false}]}
+  ]
+}
