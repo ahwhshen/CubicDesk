@@ -1,4 +1,5 @@
-﻿param([string]$OutputDirectory='')
+﻿# 用途：使用系统 .NET Framework 编译器构建 WPF 程序。
+param([string]$OutputDirectory='')
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
 $out=if($OutputDirectory){[IO.Path]::GetFullPath($OutputDirectory)}else{Join-Path $root 'outputs/CubicDesk'}
