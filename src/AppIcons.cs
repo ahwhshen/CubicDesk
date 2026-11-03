@@ -1,3 +1,4 @@
+﻿// 用途：统一应用图标来源、下载缓存与占位图显示。
 using System;
 using System.IO;
 using System.Linq;
