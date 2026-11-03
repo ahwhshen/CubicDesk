@@ -1,3 +1,4 @@
+﻿// 用途：将简单 JSON 和 Lua 配置转成可备份保存的原生表单。
 using System;
 using System.IO;
 using System.Linq;
