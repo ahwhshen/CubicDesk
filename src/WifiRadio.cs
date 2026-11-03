@@ -1,3 +1,4 @@
+﻿// 用途：通过 Windows WLAN 接口扫描热点、临时连接与恢复原网络。
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
