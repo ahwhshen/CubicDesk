@@ -1,3 +1,4 @@
+﻿// 用途：管理资源上传下载、图片适配与 FFmpeg 视频转码。
 using System;
 using System.IO;
 using System.Linq;
