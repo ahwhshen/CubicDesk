@@ -1,3 +1,4 @@
+﻿// 用途：绘制白色液态玻璃、柔和光晕与原生窗口交互效果。
 using System;
 using System.Windows;
 using System.Windows.Controls;
