@@ -61,7 +61,18 @@ namespace CubicDesk {
   public sealed class ConfigField {
     public string Key;public object Value;public int Start,Length;public string[] JsonPath;public FrameworkElement Control;
     public static bool IsNumber(object o){return o is int||o is long||o is double||o is decimal||o is float;}
-    public object Read(){if(Value is bool)return ((CheckBox)Control).IsChecked==true;string s=((TextBox)Control).Text;if(IsNumber(Value)){double n;if(!double.TryParse(s,NumberStyles.Float,CultureInfo.InvariantCulture,out n)||double.IsInfinity(n)||double.IsNaN(n))throw new Exception(Key+" 必须填写有效数字。");return n;}return s;}
+public object Read(){
+  if(Value is bool)return ((CheckBox)Control).IsChecked==true;
+  string text=((TextBox)Control).Text;if(!IsNumber(Value))return text;
+  if(text==Convert.ToString(Value,CultureInfo.InvariantCulture))return Value;
+  var culture=CultureInfo.InvariantCulture;
+  if(Value is int){int n;if(int.TryParse(text,NumberStyles.Integer,culture,out n))return n;}
+  else if(Value is long){long n;if(long.TryParse(text,NumberStyles.Integer,culture,out n))return n;}
+  else if(Value is decimal){decimal n;if(decimal.TryParse(text,NumberStyles.Float,culture,out n))return n;}
+  else if(Value is float){float n;if(float.TryParse(text,NumberStyles.Float,culture,out n)&&!float.IsNaN(n)&&!float.IsInfinity(n))return n;}
+  else {double n;if(double.TryParse(text,NumberStyles.Float,culture,out n)&&!double.IsNaN(n)&&!double.IsInfinity(n))return n;}
+  throw new Exception(Key+" 必须填写原数值类型范围内的有效数字。");
+}
     public static List<ConfigField> ParseLua(string text){
       var result=new List<ConfigField>();
       var pattern=@"(?m)^[ \t]*(?:(?:config|settings)\.)?([A-Za-z_]\w*)[ \t]*=[ \t]*(true|false|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|""(?:[^""\\\r\n]|\\.)*""|'(?:[^'\\\r\n]|\\.)*')(?=[ \t]*,?[ \t]*(?:--[^\r\n]*)?\r?$)";
