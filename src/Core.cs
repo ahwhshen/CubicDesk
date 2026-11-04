@@ -62,7 +62,7 @@ namespace CubicDesk {
         if(payload!=null)req.Content=new StringContent(J.Stringify(payload),Encoding.UTF8,"application/json");
         using(var res=await client.SendAsync(req,token)) {
           string text=await res.Content.ReadAsStringAsync();Dictionary<string,object> data;
-          try{data=J.Parse(text);}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
+          try{data=J.Parse(text);if(data==null||(data.ContainsKey("ok")&&!(data["ok"] is bool)))throw new FormatException();}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
           if(!res.IsSuccessStatusCode||(J.Get(data,"ok") is bool&&!J.Bool(data,"ok")))throw new Exception(J.Str(data,"error",J.Str(data,"message","HTTP "+(int)res.StatusCode)));
           return data;
         }
