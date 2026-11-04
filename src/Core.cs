@@ -76,7 +76,7 @@ public static bool IsDevice(Dictionary<string,object> s) {
       }
     }
     public async Task Put(string path,byte[] bytes,string mime="application/octet-stream") {
-      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await bulk.PutAsync(new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();if(!res.IsSuccessStatusCode)throw new Exception("写入失败：HTTP "+(int)res.StatusCode);if(!string.IsNullOrWhiteSpace(text)){var j=J.Parse(text);if(J.Get(j,"ok") is bool&&!J.Bool(j,"ok"))throw new Exception(J.Str(j,"error"));}}}}
+      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await bulk.PutAsync(new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();UploadResponse.EnsureSuccess(res.StatusCode,text);}}}
     }
     public string FileRoute(string path) { return "/api/system/fs/file?path="+Uri.EscapeDataString(path); }
     public async Task BackupAndPut(string path,byte[] bytes,string mime="application/json") {
