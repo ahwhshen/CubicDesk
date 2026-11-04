@@ -50,10 +50,17 @@ namespace CubicDesk {
     public static string Normalize(string value) {
       string s=(value??"").Trim(); if(s.StartsWith("http://",StringComparison.OrdinalIgnoreCase))s=s.Substring(7);s=s.TrimEnd('/');
       IPAddress ip;if(IPAddress.TryParse(s,out ip)&&Private(ip))return ip.ToString();
-      if(System.Text.RegularExpressions.Regex.IsMatch(s,@"^[a-zA-Z0-9-]+\.local$"))return s;
+      if(System.Text.RegularExpressions.Regex.IsMatch(s,@"^[a-zA-Z0-9-]+\.local$",System.Text.RegularExpressions.RegexOptions.IgnoreCase))return s.ToLowerInvariant();
       throw new ArgumentException("请输入局域网 IPv4 地址，或以 .local 结尾的设备名称。");
     }
-    public static bool IsDevice(Dictionary<string,object> s) { var w=J.Map(s,"wifi");return J.Bool(s,"ok")&&J.Get(s,"installed_apps")!=null&&J.Str(s,"main_path")=="/main"&&(J.Get(w,"ap_ssid")!=null||J.Get(w,"sta_ssid")!=null); }
+public static bool IsDevice(Dictionary<string,object> s) {
+  var wifi=J.Get(s,"wifi") as Dictionary<string,object>;object apps=J.Get(s,"installed_apps");
+  if(!J.Bool(s,"ok")||J.Str(s,"main_path")!="/main"||wifi==null||(!(J.Get(wifi,"ap_ssid") is string)&&!(J.Get(wifi,"sta_ssid") is string)))return false;
+  var records=apps as IEnumerable;if(records==null||apps is string||apps is IDictionary)return false;
+  var ids=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+  foreach(object record in records){var app=record as Dictionary<string,object>;object id=J.Get(app,"id");if(app==null||!(id is string)||string.IsNullOrWhiteSpace((string)id)||!ids.Add((string)id))return false;}
+  return true;
+}
     public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await DeviceRequestTimeout.Get(client,route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
     public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await DeviceRequestTimeout.Get(bulk,new Uri(client.BaseAddress,route).AbsoluteUri,CancellationToken.None)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
     public async Task<string> Text(string route) { return Encoding.UTF8.GetString(await Bytes(route,CancellationToken.None)); }
@@ -62,14 +69,14 @@ namespace CubicDesk {
         if(payload!=null)req.Content=new StringContent(J.Stringify(payload),Encoding.UTF8,"application/json");
         using(var res=await DeviceRequestTimeout.Send(client,req,token)) {
           string text=await res.Content.ReadAsStringAsync();Dictionary<string,object> data;
-          try{data=J.Parse(text);}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
+          try{data=J.Parse(text);if(data==null||(data.ContainsKey("ok")&&!(data["ok"] is bool)))throw new FormatException();}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
           if(!res.IsSuccessStatusCode||(J.Get(data,"ok") is bool&&!J.Bool(data,"ok")))throw new Exception(J.Str(data,"error",J.Str(data,"message","HTTP "+(int)res.StatusCode)));
           return data;
         }
       }
     }
     public async Task Put(string path,byte[] bytes,string mime="application/octet-stream") {
-      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await DeviceRequestTimeout.Put(bulk,new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();if(!res.IsSuccessStatusCode)throw new Exception("写入失败：HTTP "+(int)res.StatusCode);if(!string.IsNullOrWhiteSpace(text)){var j=J.Parse(text);if(J.Get(j,"ok") is bool&&!J.Bool(j,"ok"))throw new Exception(J.Str(j,"error"));}}}}
+      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await DeviceRequestTimeout.Put(bulk,new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();UploadResponse.EnsureSuccess(res.StatusCode,text);}}}
     }
     public string FileRoute(string path) { return "/api/system/fs/file?path="+Uri.EscapeDataString(path); }
     public async Task BackupAndPut(string path,byte[] bytes,string mime="application/json") {

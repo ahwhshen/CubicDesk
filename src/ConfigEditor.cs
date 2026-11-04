@@ -61,17 +61,44 @@ namespace CubicDesk {
   public sealed class ConfigField {
     public string Key;public object Value;public int Start,Length;public string[] JsonPath;public FrameworkElement Control;
     public static bool IsNumber(object o){return o is int||o is long||o is double||o is decimal||o is float;}
-    public object Read(){if(Value is bool)return ((CheckBox)Control).IsChecked==true;string s=((TextBox)Control).Text;if(IsNumber(Value)){double n;if(!double.TryParse(s,NumberStyles.Float,CultureInfo.InvariantCulture,out n)||double.IsInfinity(n)||double.IsNaN(n))throw new Exception(Key+" 必须填写有效数字。");return n;}return s;}
+public object Read(){
+  if(Value is bool)return ((CheckBox)Control).IsChecked==true;
+  string text=((TextBox)Control).Text;if(!IsNumber(Value))return text;
+  if(text==Convert.ToString(Value,CultureInfo.InvariantCulture))return Value;
+  var culture=CultureInfo.InvariantCulture;
+  if(Value is int){int n;if(int.TryParse(text,NumberStyles.Integer,culture,out n))return n;}
+  else if(Value is long){long n;if(long.TryParse(text,NumberStyles.Integer,culture,out n))return n;}
+  else if(Value is decimal){decimal n;if(decimal.TryParse(text,NumberStyles.Float,culture,out n))return n;}
+  else if(Value is float){float n;if(float.TryParse(text,NumberStyles.Float,culture,out n)&&!float.IsNaN(n)&&!float.IsInfinity(n))return n;}
+  else {double n;if(double.TryParse(text,NumberStyles.Float,culture,out n)&&!double.IsNaN(n)&&!double.IsInfinity(n))return n;}
+  throw new Exception(Key+" 必须填写原数值类型范围内的有效数字。");
+}
     public static List<ConfigField> ParseLua(string text){
       var result=new List<ConfigField>();
       var pattern=@"(?m)^[ \t]*(?:(?:config|settings)\.)?([A-Za-z_]\w*)[ \t]*=[ \t]*(true|false|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|""(?:[^""\\\r\n]|\\.)*""|'(?:[^'\\\r\n]|\\.)*')(?=[ \t]*,?[ \t]*(?:--[^\r\n]*)?\r?$)";
-      foreach(Match m in Regex.Matches(text,pattern)){string key=m.Groups[1].Value,literal=m.Groups[2].Value;if(key=="local"||key=="return")continue;object value;
+      var code=LuaCodeMap.Create(text);
+      foreach(Match m in Regex.Matches(text,pattern)){if(!code[m.Groups[1].Index])continue;string key=m.Groups[1].Value,literal=m.Groups[2].Value;if(key=="local"||key=="return")continue;object value;
         if(literal=="true"||literal=="false")value=literal=="true";
-        else if(literal.StartsWith("\"")||literal.StartsWith("'")){string s=literal.Substring(1,literal.Length-2);value=Regex.Replace(s,@"\\([\\""'nrt])",delegate(Match e){switch(e.Groups[1].Value){case "n":return "\n";case "r":return "\r";case "t":return "\t";default:return e.Groups[1].Value;}});}
+        else if(literal.StartsWith("\"")||literal.StartsWith("'")){string decoded;if(!TryLuaString(literal,out decoded))continue;value=decoded;}
         else {double n;if(!double.TryParse(literal,NumberStyles.Float,CultureInfo.InvariantCulture,out n))continue;value=n;}
         result.Add(new ConfigField {Key=key,Value=value,Start=m.Groups[2].Index,Length=m.Groups[2].Length});
       }return result;
     }
+static bool TryLuaString(string literal,out string value){
+  var output=new StringBuilder();value="";
+  for(int i=1;i<literal.Length-1;i++){
+    char c=literal[i];if(c!='\\'){output.Append(c);continue;}
+    if(++i>=literal.Length-1)return false;c=literal[i];
+    if(c>='0'&&c<='9'){
+      int number=c-'0',digits=1;
+      while(digits<3&&i+1<literal.Length-1&&literal[i+1]>='0'&&literal[i+1]<='9'){number=number*10+literal[++i]-'0';digits++;}
+      // Non-ASCII Lua byte strings cannot always be represented as a .NET UTF-8 string.
+      // Leave those fields untouched instead of silently changing their bytes.
+      if(number>127)return false;output.Append((char)number);continue;
+    }
+    switch(c){case 'a':output.Append('\a');break;case 'b':output.Append('\b');break;case 'f':output.Append('\f');break;case 'n':output.Append('\n');break;case 'r':output.Append('\r');break;case 't':output.Append('\t');break;case 'v':output.Append('\v');break;case '\\':case '\'':case '"':output.Append(c);break;default:return false;}
+  }value=output.ToString();return true;
+}
     public static string LuaLiteral(object v){if(v is bool)return (bool)v?"true":"false";if(IsNumber(v))return Convert.ToString(v,CultureInfo.InvariantCulture);var b=new StringBuilder("\"");foreach(char c in Convert.ToString(v)){switch(c){case '\\':b.Append("\\\\");break;case '"':b.Append("\\\"");break;case '\n':b.Append("\\n");break;case '\r':b.Append("\\r");break;case '\t':b.Append("\\t");break;default:if(c<32)b.Append("\\"+((int)c).ToString("D3"));else b.Append(c);break;}}return b.Append('"').ToString();}
     public static string ApplyEdits(string text,IEnumerable<ConfigEdit> edits){var b=new StringBuilder(text);foreach(var e in edits.OrderByDescending(e=>e.Start)){b.Remove(e.Start,e.Length);b.Insert(e.Start,e.Value);}return b.ToString();}
   }
