@@ -53,7 +53,14 @@ namespace CubicDesk {
       if(System.Text.RegularExpressions.Regex.IsMatch(s,@"^[a-zA-Z0-9-]+\.local$"))return s;
       throw new ArgumentException("请输入局域网 IPv4 地址，或以 .local 结尾的设备名称。");
     }
-    public static bool IsDevice(Dictionary<string,object> s) { var w=J.Map(s,"wifi");return J.Bool(s,"ok")&&J.Get(s,"installed_apps")!=null&&J.Str(s,"main_path")=="/main"&&(J.Get(w,"ap_ssid")!=null||J.Get(w,"sta_ssid")!=null); }
+public static bool IsDevice(Dictionary<string,object> s) {
+  var wifi=J.Get(s,"wifi") as Dictionary<string,object>;object apps=J.Get(s,"installed_apps");
+  if(!J.Bool(s,"ok")||J.Str(s,"main_path")!="/main"||wifi==null||(!(J.Get(wifi,"ap_ssid") is string)&&!(J.Get(wifi,"sta_ssid") is string)))return false;
+  var records=apps as IEnumerable;if(records==null||apps is string||apps is IDictionary)return false;
+  var ids=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+  foreach(object record in records){var app=record as Dictionary<string,object>;object id=J.Get(app,"id");if(app==null||!(id is string)||string.IsNullOrWhiteSpace((string)id)||!ids.Add((string)id))return false;}
+  return true;
+}
     public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await client.GetAsync(route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
     public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await bulk.GetAsync(new Uri(client.BaseAddress,route))){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
     public async Task<string> Text(string route) { return Encoding.UTF8.GetString(await Bytes(route,CancellationToken.None)); }
