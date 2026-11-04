@@ -61,13 +61,13 @@ public static bool IsDevice(Dictionary<string,object> s) {
   foreach(object record in records){var app=record as Dictionary<string,object>;object id=J.Get(app,"id");if(app==null||!(id is string)||string.IsNullOrWhiteSpace((string)id)||!ids.Add((string)id))return false;}
   return true;
 }
-    public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await client.GetAsync(route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
-    public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await bulk.GetAsync(new Uri(client.BaseAddress,route))){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
+    public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await DeviceRequestTimeout.Get(client,route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
+    public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await DeviceRequestTimeout.Get(bulk,new Uri(client.BaseAddress,route).AbsoluteUri,CancellationToken.None)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
     public async Task<string> Text(string route) { return Encoding.UTF8.GetString(await Bytes(route,CancellationToken.None)); }
     public async Task<Dictionary<string,object>> Request(string path,string method="GET",object payload=null,CancellationToken token=default(CancellationToken)) {
       using(var req=new HttpRequestMessage(new HttpMethod(method),path)) {
         if(payload!=null)req.Content=new StringContent(J.Stringify(payload),Encoding.UTF8,"application/json");
-        using(var res=await client.SendAsync(req,token)) {
+        using(var res=await DeviceRequestTimeout.Send(client,req,token)) {
           string text=await res.Content.ReadAsStringAsync();Dictionary<string,object> data;
           try{data=J.Parse(text);if(data==null||(data.ContainsKey("ok")&&!(data["ok"] is bool)))throw new FormatException();}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
           if(!res.IsSuccessStatusCode||(J.Get(data,"ok") is bool&&!J.Bool(data,"ok")))throw new Exception(J.Str(data,"error",J.Str(data,"message","HTTP "+(int)res.StatusCode)));
@@ -76,7 +76,7 @@ public static bool IsDevice(Dictionary<string,object> s) {
       }
     }
     public async Task Put(string path,byte[] bytes,string mime="application/octet-stream") {
-      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await bulk.PutAsync(new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();UploadResponse.EnsureSuccess(res.StatusCode,text);}}}
+      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await DeviceRequestTimeout.Put(bulk,new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();UploadResponse.EnsureSuccess(res.StatusCode,text);}}}
     }
     public string FileRoute(string path) { return "/api/system/fs/file?path="+Uri.EscapeDataString(path); }
     public async Task BackupAndPut(string path,byte[] bytes,string mime="application/json") {
