@@ -54,13 +54,13 @@ namespace CubicDesk {
       throw new ArgumentException("请输入局域网 IPv4 地址，或以 .local 结尾的设备名称。");
     }
     public static bool IsDevice(Dictionary<string,object> s) { var w=J.Map(s,"wifi");return J.Bool(s,"ok")&&J.Get(s,"installed_apps")!=null&&J.Str(s,"main_path")=="/main"&&(J.Get(w,"ap_ssid")!=null||J.Get(w,"sta_ssid")!=null); }
-    public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await client.GetAsync(route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
-    public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await bulk.GetAsync(new Uri(client.BaseAddress,route))){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
+    public async Task<byte[]> Bytes(string route,CancellationToken token) { using(var r=await DeviceRequestTimeout.Get(client,route,token)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();} }
+    public async Task<byte[]> Download(string route) {using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var r=await DeviceRequestTimeout.Get(bulk,new Uri(client.BaseAddress,route).AbsoluteUri,CancellationToken.None)){r.EnsureSuccessStatusCode();return await r.Content.ReadAsByteArrayAsync();}}}
     public async Task<string> Text(string route) { return Encoding.UTF8.GetString(await Bytes(route,CancellationToken.None)); }
     public async Task<Dictionary<string,object>> Request(string path,string method="GET",object payload=null,CancellationToken token=default(CancellationToken)) {
       using(var req=new HttpRequestMessage(new HttpMethod(method),path)) {
         if(payload!=null)req.Content=new StringContent(J.Stringify(payload),Encoding.UTF8,"application/json");
-        using(var res=await client.SendAsync(req,token)) {
+        using(var res=await DeviceRequestTimeout.Send(client,req,token)) {
           string text=await res.Content.ReadAsStringAsync();Dictionary<string,object> data;
           try{data=J.Parse(text);}catch{throw new Exception("设备返回了无法识别的响应（HTTP "+(int)res.StatusCode+"）。");}
           if(!res.IsSuccessStatusCode||(J.Get(data,"ok") is bool&&!J.Bool(data,"ok")))throw new Exception(J.Str(data,"error",J.Str(data,"message","HTTP "+(int)res.StatusCode)));
@@ -69,7 +69,7 @@ namespace CubicDesk {
       }
     }
     public async Task Put(string path,byte[] bytes,string mime="application/octet-stream") {
-      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await bulk.PutAsync(new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();if(!res.IsSuccessStatusCode)throw new Exception("写入失败：HTTP "+(int)res.StatusCode);if(!string.IsNullOrWhiteSpace(text)){var j=J.Parse(text);if(J.Get(j,"ok") is bool&&!J.Bool(j,"ok"))throw new Exception(J.Str(j,"error"));}}}}
+      using(var bulk=new HttpClient(new HttpClientHandler {UseProxy=false,AllowAutoRedirect=false})){bulk.Timeout=TimeSpan.FromMinutes(5);using(var content=new ByteArrayContent(bytes)){content.Headers.ContentType=new System.Net.Http.Headers.MediaTypeHeaderValue(mime);using(var res=await DeviceRequestTimeout.Put(bulk,new Uri(client.BaseAddress,path),content)) {string text=await res.Content.ReadAsStringAsync();if(!res.IsSuccessStatusCode)throw new Exception("写入失败：HTTP "+(int)res.StatusCode);if(!string.IsNullOrWhiteSpace(text)){var j=J.Parse(text);if(J.Get(j,"ok") is bool&&!J.Bool(j,"ok"))throw new Exception(J.Str(j,"error"));}}}}
     }
     public string FileRoute(string path) { return "/api/system/fs/file?path="+Uri.EscapeDataString(path); }
     public async Task BackupAndPut(string path,byte[] bytes,string mime="application/json") {
