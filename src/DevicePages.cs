@@ -69,15 +69,24 @@ namespace CubicDesk {
         var display=Stack(AppHeading("settings","显示与偏好",19,36));
         var brightness=new Slider {Minimum=1,Maximum=100,Value=J.Num(live,"brightness",J.Num(config,"brightness",80)),TickFrequency=1,IsSnapToTickEnabled=true,Margin=new Thickness(0,8,0,8)};var value=Text(((int)brightness.Value)+"%",14,"#276FC0");brightness.ValueChanged+=delegate{value.Text=((int)brightness.Value)+"%";};Field(display,"屏幕亮度",Stack(brightness,value));
         var timezone=Input(J.Str(config,"timezone","CST-8"));Field(display,"时区",timezone,"中国标准时间：CST-8；UTC：UTC0。");
-        var language=Select(new[]{"简体中文","繁體中文","English","日本語"},new Dictionary<string,string>{{"zh-CN","简体中文"},{"zh-TW","繁體中文"},{"en","English"},{"ja","日本語"}}.ContainsKey(J.Str(config,"language","zh-CN"))?new Dictionary<string,string>{{"zh-CN","简体中文"},{"zh-TW","繁體中文"},{"en","English"},{"ja","日本語"}}[J.Str(config,"language","zh-CN")]:"简体中文");Field(display,"摆件界面语言",language);
+var languageIds=new List<string>{"zh-CN","zh-TW","en","ja"};var languageNames=new List<string>{"简体中文","繁體中文","English","日本語"};
+string existingLanguage=J.Str(config,"language","zh-CN");int languageIndex=languageIds.IndexOf(existingLanguage);
+if(languageIndex<0){languageIds.Add(existingLanguage);languageNames.Add(existingLanguage);languageIndex=languageIds.Count-1;}
+var language=Select(languageNames);language.SelectedIndex=languageIndex;Field(display,"摆件界面语言",language,"未识别的现有语言会保留原值；选择其他语言后才会替换。");
         var weather=Input(J.Str(config,"weather_address",""));Field(display,"天气位置",weather,"沿用摆件天气应用支持的城市或地址格式。");
         var startup=Stack(Text("启动与连接",19,"#263C59",true));
-        var auto=new ComboBox();auto.Items.Add("不自动打开应用");var ids=new List<string>{""};foreach(var a in J.List(state,"apps")){auto.Items.Add(new ComboBoxItem {Content=Row(AppIcon(J.Str(a,"id"),Name(a),24),Text(Name(a)+"  ·  "+J.Str(a,"id"),12))});ids.Add(J.Str(a,"id"));}
+var auto=new ComboBox();auto.Items.Add("不自动打开应用");var ids=new List<string>{""};
+var startupApps=J.List(state,"apps").Concat(J.List(state,"installed_apps").Where(a=>J.Str(a,"kind","app")=="app")).GroupBy(a=>J.Str(a,"id"),StringComparer.OrdinalIgnoreCase).Select(g=>g.First());
+foreach(var a in startupApps){string id=J.Str(a,"id");if(id=="")continue;auto.Items.Add(new ComboBoxItem {Content=Row(AppIcon(id,Name(a),24),Text(Name(a)+"  ·  "+id,12))});ids.Add(id);}
+string existingStartup=J.Str(config,"autostart_app_id");if(existingStartup!=""&&!ids.Contains(existingStartup)){ids.Add(existingStartup);auto.Items.Add("保留现有应用 · "+existingStartup);}
         int index=ids.IndexOf(J.Str(config,"autostart_app_id"));auto.SelectedIndex=J.Bool(config,"autostart_enabled")&&index>=0?index:0;Field(startup,"开机自动打开",auto);
         var ap=new CheckBox {Content="联网后仍保留摆件配网热点",IsChecked=J.Get(config,"ap_enabled")==null||J.Bool(config,"ap_enabled")};startup.Children.Add(Gap(12));startup.Children.Add(ap);startup.Children.Add(Text("保留热点便于网络变化时重新配置。",11,"#687E98"));
-        startup.Children.Add(Gap(20));startup.Children.Add(Button("保存到摆件",async delegate{
-          var latest=J.Parse(await device.Text(device.FileRoute("/sd/apps/settings.json")));latest["brightness"]=(int)brightness.Value;latest["timezone"]=timezone.Text.Trim();latest["language"]=new[]{"zh-CN","zh-TW","en","ja"}[language.SelectedIndex];latest["weather_address"]=weather.Text.Trim();latest["autostart_enabled"]=auto.SelectedIndex>0;latest["autostart_app_id"]=ids[auto.SelectedIndex];latest["ap_enabled"]=ap.IsChecked==true;
-          await device.BackupAndPut("/sd/apps/settings.json",Encoding.UTF8.GetBytes(J.Stringify(latest)));await device.Request("/display/api/settings?brightness="+(int)brightness.Value,"POST");Notice("设置已保存。显示亮度已更新；部分启动设置会在下次启动时生效。");
+Func<Dictionary<string,object>> readForm=delegate{return J.D("brightness",(int)brightness.Value,"timezone",timezone.Text.Trim(),"language",languageIds[language.SelectedIndex],"weather_address",weather.Text.Trim(),"autostart_enabled",auto.SelectedIndex>0,"autostart_app_id",ids[auto.SelectedIndex],"ap_enabled",ap.IsChecked==true);};
+var initialForm=readForm();
+startup.Children.Add(Gap(20));startup.Children.Add(Button("保存到摆件",async delegate{
+          var edited=readForm();bool brightnessChanged=!object.Equals(initialForm["brightness"],edited["brightness"]);
+          var latest=J.Parse(await device.Text(device.FileRoute("/sd/apps/settings.json")));DeviceSettingsMerge.Apply(latest,initialForm,edited);
+          await device.BackupAndPut("/sd/apps/settings.json",Encoding.UTF8.GetBytes(J.Stringify(latest)));if(brightnessChanged)await device.Request("/display/api/settings?brightness="+(int)brightness.Value,"POST");initialForm=edited;Notice("设置已保存；部分启动设置会在下次启动时生效。");
         },true));startup.Children.Add(Gap(10));startup.Children.Add(Text("每次保存会备份原始配置，并保留未编辑的字段。",11,"#687E98"));container.Children.Add(Columns(Card(display),Card(startup),1.15));
         var firmware=J.Map(state,"firmware_update");var fwStatus=Text("当前版本 v"+J.Str(firmware,"current_version","--"),14,"#276FC0");var firmwarePanel=Stack(Text("系统固件",18,"#263C59",true),Gap(10),fwStatus,Gap(15));bool canInstall=false;
         var install=Button("安装更新",async delegate{if(!canInstall)throw new Exception("请先检查并确认有可用更新。");if(MessageBox.Show("设备将下载并安装固件，完成后自动重启。请保持供电。继续？","安装固件更新",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;await device.Request("/api/system/firmware/update","POST");Notice("固件安装已开始，请保持摆件供电并等待重启。");});install.IsEnabled=false;
