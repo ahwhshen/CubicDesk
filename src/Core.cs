@@ -50,7 +50,7 @@ namespace CubicDesk {
     public static string Normalize(string value) {
       string s=(value??"").Trim(); if(s.StartsWith("http://",StringComparison.OrdinalIgnoreCase))s=s.Substring(7);s=s.TrimEnd('/');
       IPAddress ip;if(IPAddress.TryParse(s,out ip)&&Private(ip))return ip.ToString();
-      if(System.Text.RegularExpressions.Regex.IsMatch(s,@"^[a-zA-Z0-9-]+\.local$"))return s;
+      if(System.Text.RegularExpressions.Regex.IsMatch(s,@"^[a-zA-Z0-9-]+\.local$",System.Text.RegularExpressions.RegexOptions.IgnoreCase))return s.ToLowerInvariant();
       throw new ArgumentException("请输入局域网 IPv4 地址，或以 .local 结尾的设备名称。");
     }
     public static bool IsDevice(Dictionary<string,object> s) { var w=J.Map(s,"wifi");return J.Bool(s,"ok")&&J.Get(s,"installed_apps")!=null&&J.Str(s,"main_path")=="/main"&&(J.Get(w,"ap_ssid")!=null||J.Get(w,"sta_ssid")!=null); }
