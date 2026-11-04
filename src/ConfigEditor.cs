@@ -65,7 +65,8 @@ namespace CubicDesk {
     public static List<ConfigField> ParseLua(string text){
       var result=new List<ConfigField>();
       var pattern=@"(?m)^[ \t]*(?:(?:config|settings)\.)?([A-Za-z_]\w*)[ \t]*=[ \t]*(true|false|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|""(?:[^""\\\r\n]|\\.)*""|'(?:[^'\\\r\n]|\\.)*')(?=[ \t]*,?[ \t]*(?:--[^\r\n]*)?\r?$)";
-      foreach(Match m in Regex.Matches(text,pattern)){string key=m.Groups[1].Value,literal=m.Groups[2].Value;if(key=="local"||key=="return")continue;object value;
+      var code=LuaCodeMap.Create(text);
+      foreach(Match m in Regex.Matches(text,pattern)){if(!code[m.Groups[1].Index])continue;string key=m.Groups[1].Value,literal=m.Groups[2].Value;if(key=="local"||key=="return")continue;object value;
         if(literal=="true"||literal=="false")value=literal=="true";
         else if(literal.StartsWith("\"")||literal.StartsWith("'")){string s=literal.Substring(1,literal.Length-2);value=Regex.Replace(s,@"\\([\\""'nrt])",delegate(Match e){switch(e.Groups[1].Value){case "n":return "\n";case "r":return "\r";case "t":return "\t";default:return e.Groups[1].Value;}});}
         else {double n;if(!double.TryParse(literal,NumberStyles.Float,CultureInfo.InvariantCulture,out n))continue;value=n;}
